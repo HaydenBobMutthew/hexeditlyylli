@@ -1,7 +1,7 @@
 # hexeditlyylli
 A text user interface-based [hex editor](https://en.wikipedia.org/wiki/Hex_editor).
 
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FHaydenBobMutthew%2Fhexeditlyylli%2F&count_bg=%233961FF&title_bg=%23555555&icon=github.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FHaydenBobMutthew%2Fhexeditlyylli%2F&count_bg=%233961FF&title_bg=%23555555&icon=github.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/HaydenBobMutthew/hexeditlyylli)
 
 ## Documentation
 
@@ -33,7 +33,7 @@ After printing a page, it is prompted to input option command.
   - Go to the page that position *pos* located.
 - `prev`
   - Back to the previous page.
-- `next` or empty
+- `next` or with no command input
   - Go to the next page.
 - `help`
   - Get help of option commands.
