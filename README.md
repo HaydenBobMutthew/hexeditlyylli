@@ -23,7 +23,7 @@ Run `__main__.py -f <filename> -l <number of lines> -b <bytes per line>` to view
   - Append *data* at the end of file.
 - `trunc <size>` or `truncate <size>`
   - Truncate the file to at most *size* bytes.
-- `inspect <start>
+- `inspect <start>`
   - Inspect and edit data from position *start* in bytes. Edit feature work in progress.
 - `help`
   - Get help of option command.
