@@ -29,5 +29,9 @@ After printing a page, it is prompted to input option command.
   - After printing a page, it is prompted to input inspect option command.
     - `edit <dtype> <data>`
       - Write *data* of data type *dtype* starting from position *pos*.
+- `prev`
+  - Back to the previous page.
+- `next` or empty
+  - Go to the next page.
 - `help`
   - Get help of option commands.
