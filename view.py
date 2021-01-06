@@ -3,6 +3,7 @@ import inspect
 import os
 import struct
 from colorama import init, Fore, Back, Style
+
 init()
 
 discard_negatives = lambda x: x if x >= 0 else 0
@@ -39,8 +40,8 @@ def code_to_char(code, highlight=None):
     else:
         returned = struct.unpack("cc", code.to_bytes(2, 'big'))[1].decode('windows-1252')
         
-    if highlight:
-        returned = f'{Back.WHITE}{Fore.BLACK}{highlight}'
+    if highlight != None:
+        returned = f'{highlight[0]}{highlight[1]}{returned}'
     
     return returned
 
@@ -66,10 +67,11 @@ class HexFile(object):
         if start != None:
             end = start + len(data) - 1
             highlight_flag = True
-            if inspect != None:
-                highlight = Back.YELLOW
+            if inspect:
+                highlight_back = Back.YELLOW
             else:
-                highlight = Back.WHITE
+                highlight_back = Back.WHITE
+            highlight_fore = Fore.BLACK
         else:
             highlight_flag = False
         
@@ -80,6 +82,8 @@ class HexFile(object):
         for line_section_no in range(0, self.byte_size, self.bytes_per_line):
             contents = self.file.read(self.bytes_per_line)
             contents = bytes(contents)
+            
+            printed = ''
             
             if contents == b'':
                 if start != None:
@@ -92,32 +96,34 @@ class HexFile(object):
             
             printed = f'{line_no + line_section_no:0{foo}x} | '
             
-            byte_loc = -1
+            byte_pos = -1
             
-            for byte_loc, byte in enumerate(contents):
-                current_byte_loc = line_no + line_section_no + byte_loc
+            for byte_pos, byte in enumerate(contents):
+                current_byte_pos = line_no + line_section_no + byte_pos
                 
                 if start != None:
-                    if start <= current_byte_loc <= end:
-                        printed = f'{printed}{highlight}{Fore.BLACK}'
+                    if start <= current_byte_pos <= end:
+                        printed = f'{printed}{highlight_back}{Fore.BLACK}'
                         highlight_flag = True
                 
                 printed = f'{printed}{byte:02x} '
                 
-                if byte_loc == self.__half - 1:
+                if byte_pos == self.__half - 1:
                     if highlight_flag:
-                        printed = f'{printed[:-1]}{Style.RESET_ALL} | {highlight}{Fore.BLACK}'
+                        printed = f'{printed[:-1]}{Style.RESET_ALL} | '
+                        if current_byte_pos != end:
+                            printed = f'{printed}{highlight_back}{Fore.BLACK}'
                     else:
                         printed = f'{printed}| '
                 
                 if start != None:
-                    if byte_loc == self.bytes_per_line - 1 and highlight_flag or current_byte_loc == end:
-                        printed = f'{printed[:-1]}{Style.RESET_ALL} '
-                    if not (start <= current_byte_loc <= end):
+                    if not (start <= current_byte_pos <= end):
                         highlight_flag = False
+                    if byte_pos == self.bytes_per_line - 1 and highlight_flag:
+                        printed = f'{printed[:-1]}{Style.RESET_ALL} '
             
-            if byte_loc < self.bytes_per_line - 1:
-                for i in range(byte_loc + 1, self.bytes_per_line):
+            if byte_pos < self.bytes_per_line - 1:
+                for i in range(byte_pos + 1, self.bytes_per_line):
                     printed = f'{printed}   '
                     
                     if i == self.__half - 1:
@@ -125,16 +131,14 @@ class HexFile(object):
             
             printed = f'{printed}|| '
             
-            for byte_loc, byte in enumerate(contents):
-                current_byte_loc = line_no + line_section_no + byte_loc
+            for byte_pos, byte in enumerate(contents):
+                current_byte_pos = line_no + line_section_no + byte_pos
                 
                 if start != None:
-                    if start <= current_byte_loc <= end:
-                        highlight_flag = True
+                    if not (start <= current_byte_pos <= end):
+                        printed = f'{printed}{Style.RESET_ALL}{code_to_char(byte)}'
                     else:
-                        highlight_flag = False
-                        printed = f'{printed}{Style.RESET_ALL}'
-                    printed = f'{printed}{code_to_char(byte, highlight)}'
+                        printed = f'{printed}{code_to_char(byte, (highlight_back, highlight_fore))}'
                 else:
                     printed = f'{printed}{code_to_char(byte)}'
             
@@ -142,16 +146,23 @@ class HexFile(object):
                 printed = f'{printed}{Style.RESET_ALL}'
             
             print(printed)
+            
+        print(f'{"-" * foo}-\'{"-" * self.__half * 3}-\'{"-" * self.__half * 3}-\'\'-{"-" * self.bytes_per_line}')
     
     def prev(self):
-        self.file.seek(-(self.file.tell() // self.byte_size - 2) * self.byte_size, 1)
+        self.file.seek(discard_negatives((self.file.tell() // self.byte_size - 2) * self.byte_size))
+    
+    def goto(self, pos):
+        self.file.seek(pos // self.byte_size * self.byte_size)
     
     def close(self):
         self.file.close()
     
     def inspect(self, pos, endian):
-        # self.file.seek(-(self.file.tell() // self.byte_size) * self.byte_size, 1)
-        # self.next(pos, b'\x00\x00\x00\x00\x00\x00\x00\x00', True)
+        self.file.seek(discard_negatives((self.file.tell() // self.byte_size - 1) * self.byte_size))
+        self.next(pos, b'\x00\x00\x00\x00\x00\x00\x00\x00', True)
+        
+        print()
         
         inspected = inspect.inspect(self.file, pos, endian)
         
@@ -161,8 +172,15 @@ class HexFile(object):
         print(f'{printed_bar}.{printed_foo}.{printed_foo}\n{"Type":<29}|{"Unsigned":^22}|{"Signed":^22}\n{printed_bar}+{printed_foo}+{printed_foo}')
         
         for type_, inspected_item in inspected[0].items():
-            print(f'{type_:<29}|{inspected_item[0]:> 21} |{inspected_item[1]:> 21} ')
-            
+            print(f'{type_:<29}| {inspected_item[0]:< 20} | {inspected_item[1]:< 20} ')
+        
+        print(f"{printed_bar}+{printed_foo}'{printed_foo}")
+        
+        for type_, inspected_item in inspected[1].items():
+            print(f'{type_:<29}| {inspected_item:< 43}')
+        
+        print(f"{printed_bar}'{printed_foo}-{printed_foo}")
+        
         opt = input('Inspect option command (Press Enter to continue): ')
         
         opt = opt.split(' ', maxsplit=3)
@@ -210,7 +228,7 @@ def main(filename, bytes_per_line, line_size):
             
             option = None
             while option not in {'', 'prev', 'next', 'trunc'}:
-                option = input('Option command: ')
+                option = input('Option command (Press Enter to continue): ')
                 option = option_parser(file, option)
             
             filesize = os.path.getsize(file.name)
