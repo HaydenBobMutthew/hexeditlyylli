@@ -186,7 +186,7 @@ class HexFile(object):
         opt = opt.split(' ', maxsplit=3)
         
         if opt[0] == 'edit':
-            edit.write_typed_data(file, endian, opt[1], opt[2])
+            edit.write_typed_data(self.file, endian, opt[1], opt[2])
             self.next(pos, opt[2])
         elif opt[0] == '':
             pass
