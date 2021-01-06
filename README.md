@@ -14,6 +14,7 @@ Run `__main__.py -f <filename> -l <number of lines> -b <bytes per line>` to view
 ### Option command arguments
 
 #### File editing commands
+After printing a page, it is prompted to input option command.
 
 *data* can be a string (enclosed with `'` or `"`) or a hexadecimal number.
 
@@ -23,7 +24,10 @@ Run `__main__.py -f <filename> -l <number of lines> -b <bytes per line>` to view
   - Append *data* at the end of file.
 - `trunc <size>` or `truncate <size>`
   - Truncate the file to at most *size* bytes.
-- `inspect <start>`
-  - Inspect and edit data from position *start* in bytes. Edit feature work in progress.
+- `inspect <pos> <endian>`
+  - Inspect and edit data from position *pos* in bytes with *endian* endianness. *endian* can only be `big` or `small`.
+  - After printing a page, it is prompted to input inspect option command.
+    - `edit <dtype> <data>`
+      - Write *data* of data type *dtype* starting from position *pos*.
 - `help`
-  - Get help of option command.
+  - Get help of option commands.
