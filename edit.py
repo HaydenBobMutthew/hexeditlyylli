@@ -1,3 +1,5 @@
+from struct import pack
+
 def write_bytes(file, start, data):
     current_pos = file.tell()
     file.seek(start)
@@ -13,3 +15,13 @@ def write_ascii(file, start, data):
     
 def truncate(file, size):
     file.truncate(size)
+    
+def write_typed_data(file, endian, dtype, data):
+    if endian == 'big':
+        format_string = '>'
+    elif endian == 'little':
+        format_string = '<'
+    else:
+        raise TypeError(f"invaild endianness: '{endian}'")
+    
+    write_bytes(file, pack(f'{format_string}{dtype}', data))

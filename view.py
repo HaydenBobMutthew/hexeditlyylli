@@ -31,7 +31,7 @@ def option_parser(file, opt):
         
     return opt[0]
 
-def code_to_char(code, highlight=False):
+def code_to_char(code, highlight=None):
     if 0x00 <= code <= 0x1f or code in {0x81, 0x8d, 0x8f, 0x90, 0x9d}:
         returned = f'{Fore.GREEN}.{Style.RESET_ALL}'
     elif code == 0x7f:
@@ -40,7 +40,7 @@ def code_to_char(code, highlight=False):
         returned = struct.unpack("cc", code.to_bytes(2, 'big'))[1].decode('windows-1252')
         
     if highlight:
-        returned = f'{Back.WHITE}{Fore.BLACK}{returned}'
+        returned = f'{Back.WHITE}{Fore.BLACK}{highlight}'
     
     return returned
 
@@ -54,7 +54,7 @@ class HexFile(object):
         
         self.__half = bytes_per_line // 2
     
-    def next(self, start=None, data=None):
+    def next(self, start=None, data=None, inspect=None):
         line_no = self.file.tell()
         
         filesize = os.path.getsize(self.file.name)
@@ -65,8 +65,14 @@ class HexFile(object):
         
         if start != None:
             end = start + len(data) - 1
+            highlight_flag = True
+            if inspect != None:
+                highlight = Back.YELLOW
+            else:
+                highlight = Back.WHITE
+        else:
+            highlight_flag = False
         
-        highlight_flag = False
         break_flag = False
         
         print(f'{"-" * foo}-.{"-" * self.__half * 3}-.{"-" * self.__half * 3}-..-{"-" * self.bytes_per_line}')
@@ -93,14 +99,14 @@ class HexFile(object):
                 
                 if start != None:
                     if start <= current_byte_loc <= end:
-                        printed = f'{printed}{Back.WHITE}{Fore.BLACK}'
+                        printed = f'{printed}{highlight}{Fore.BLACK}'
                         highlight_flag = True
                 
                 printed = f'{printed}{byte:02x} '
                 
                 if byte_loc == self.__half - 1:
                     if highlight_flag:
-                        printed = f'{printed[:-1]}{Style.RESET_ALL} | {Back.WHITE}{Fore.BLACK}'
+                        printed = f'{printed[:-1]}{Style.RESET_ALL} | {highlight}{Fore.BLACK}'
                     else:
                         printed = f'{printed}| '
                 
@@ -128,7 +134,7 @@ class HexFile(object):
                     else:
                         highlight_flag = False
                         printed = f'{printed}{Style.RESET_ALL}'
-                    printed = f'{printed}{code_to_char(byte, highlight_flag)}'
+                    printed = f'{printed}{code_to_char(byte, highlight)}'
                 else:
                     printed = f'{printed}{code_to_char(byte)}'
             
@@ -136,17 +142,38 @@ class HexFile(object):
                 printed = f'{printed}{Style.RESET_ALL}'
             
             print(printed)
-            
-        highlight_flag = False
     
     def prev(self):
-        self.file.seek(-self.line_size * self.bytes_per_line * 2, 1)
+        self.file.seek(-(self.file.tell() // self.byte_size - 2) * self.byte_size, 1)
     
     def close(self):
         self.file.close()
     
-    def inspect(self, loc, dtype):
-        inspect.inspect(file, loc, dtype)
+    def inspect(self, pos, endian):
+        # self.file.seek(-(self.file.tell() // self.byte_size) * self.byte_size, 1)
+        # self.next(pos, b'\x00\x00\x00\x00\x00\x00\x00\x00', True)
+        
+        inspected = inspect.inspect(self.file, pos, endian)
+        
+        printed_foo = "-" * 22
+        printed_bar = "-" * 29
+        
+        print(f'{printed_bar}.{printed_foo}.{printed_foo}\n{"Type":<29}|{"Unsigned":^22}|{"Signed":^22}\n{printed_bar}+{printed_foo}+{printed_foo}')
+        
+        for type_, inspected_item in inspected[0].items():
+            print(f'{type_:<29}|{inspected_item[0]:> 21} |{inspected_item[1]:> 21} ')
+            
+        opt = input('Inspect option command (Press Enter to continue): ')
+        
+        opt = opt.split(' ', maxsplit=3)
+        
+        if opt[0] == 'edit':
+            edit.write_typed_data(file, endian, opt[1], opt[2])
+            self.next(pos, opt[2])
+        elif opt[0] == '':
+            pass
+        else:
+            raise ValueError(f"invaild option: '{opt[0]}'")
     
     def write(self, start, data):
         if data[0] == '"' or data[0] == "'":
@@ -171,16 +198,6 @@ class HexFile(object):
         size_ = os.path.getsize(self.file.name)
         if orinigal_pos >= size_:
             self.file.seek(discard_negatives(size_ - self.byte_size))
-            
-    def inspect(self, loc, endian):
-        inspected = inspect.inspect(self.file, loc, endian)
-        
-        printed_foo = "-" * 22
-        
-        print(f'{printed_foo}.{printed_foo}.{printed_foo}\n{"Type":<22}|{"Unsigned":^22}|{"Signed":^22}\n{printed_foo}+{printed_foo}+{printed_foo}')
-        
-        for type_, inspected_item in inspected[0].items():
-            print(f'{type_:<22}|{inspected_item[0]:> 22}|{inspected_item[1]:> 22}')
 
 def main(filename, bytes_per_line, line_size):
     with open(filename, 'rb+') as f:
@@ -203,5 +220,5 @@ def main(filename, bytes_per_line, line_size):
             
             option = None
             while option not in {'', 'prev', 'next', 'trunc'}:
-                option = input('Option command: ')
+                option = input('Option command (Press Enter to continue): ')
                 option = option_parser(file, option)
