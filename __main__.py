@@ -1,5 +1,6 @@
-import view
 from argparse import ArgumentParser
+
+from hexeditlyylli import *
 
 parser = ArgumentParser()
 parser.add_argument("-f", "--file", action="store", dest="filename")
