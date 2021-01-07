@@ -43,10 +43,18 @@ def option_parser(file, opt):
         raise NotImplementedError('work in progress')
     elif opt[0] == 'exit':
         exit()
-    elif opt[0] == 'next' or opt[0] == '':
-        pass
+    elif opt[0] == 'next':
+        if len(opt) == 1:
+            file.next(1)
+        else:
+            file.next(opt[1])
+    elif opt[0] == '':
+        file.next()
     elif opt[0] == 'prev':
-        file.prev()
+        if len(opt) == 1:
+            file.prev(1)
+        else:
+            file.prev(opt[1])
     else:
         raise ValueError(f"invaild option: '{opt[0]}'")
         
@@ -168,8 +176,18 @@ class HexFile(object):
             
         print(f'{"-" * foo}-\'{"-" * self.__half * 3}-\'{"-" * self.__half * 3}-\'\'-{"-" * self.bytes_per_line}')
     
-    def prev(self):
-        self.file.seek(discard_negatives((self.file.tell() // self.byte_size - 2) * self.byte_size))
+    def next(self, pages=1):
+        self.file.seek((self.file.tell() // self.byte_size + pages - 1) * self.byte_size)
+        
+        if self.file.tell() >= os.path.getsize(self.file.name):
+            exit()
+        
+        self.print()
+    
+    def prev(self, pages=1):
+        self.file.seek(discard_negatives((self.file.tell() // self.byte_size - pages - 1) * self.byte_size))
+        
+        self.print()
     
     def goto(self, pos):
         self.file.seek(pos // self.byte_size * self.byte_size)
@@ -264,17 +282,15 @@ def main(filename, bytes_per_line, line_size):
         
         filesize = os.path.getsize(file.name)
         
+        file.print()
+        
         break_flag = False
         while file.file.tell() < filesize or filesize == 0:
             if filesize == 0:
                 break_flag = True
             
-            file.print()
-            
-            option = None
-            while option not in {'', 'next', 'prev'}:
-                option = input('Option command (Press Enter to continue): ')
-                option = option_parser(file, option)
+            option = input('Option command (Press Enter to continue): ')
+            option = option_parser(file, option)
             
             filesize = os.path.getsize(file.name)
             
