@@ -16,7 +16,7 @@ def option_parser(file, opt):
     elif opt[0] in {'help', 'exit', 'print', 'prev', ''}:
         pass
     else:
-        opt = [opt[0]] + opt[1].split(' ', maxsplit=2)
+        opt = [opt[0]] + opt[1].split(' ', maxsplit=1)
     
     if opt[0] == 'write':
         file.write(int(opt[1], 16), opt[2])
@@ -182,18 +182,18 @@ class HexFile(object):
         
         inspected = inspect.inspect(self.file, pos, endian)
         
-        printed_foo = "-" * 22
+        printed_foo = "-" * 23
         printed_bar = "-" * 29
         
-        print(f'{printed_bar}.{printed_foo}.{printed_foo}\n{"Type":<29}|{"Unsigned":^22}|{"Signed":^22}\n{printed_bar}+{printed_foo}+{printed_foo}')
+        print(f'{printed_bar}.{printed_foo}.{printed_foo}\n{"Type":<29}|{"Unsigned":^23}|{"Signed":^23}\n{printed_bar}+{printed_foo}+{printed_foo}')
         
         for type_, inspected_item in inspected[0].items():
-            print(f'{type_:<29}| {inspected_item[0]:< 20} | {inspected_item[1]:< 20} ')
+            print(f'{type_:<29}| {inspected_item[0]:< 21} | {inspected_item[1]:< 21} ')
         
         print(f"{printed_bar}+{printed_foo}'{printed_foo}")
         
         for type_, inspected_item in inspected[1].items():
-            print(f'{type_:<29}| {inspected_item:< 43}')
+            print(f'{type_:<29}| {inspected_item:< 45}')
         
         print(f"{printed_bar}'{printed_foo}-{printed_foo}")
     
