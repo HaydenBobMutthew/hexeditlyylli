@@ -24,11 +24,10 @@ After printing a page, it is prompted to input option command.
   - Append *data* at the end of file.
 - `trunc <size>` or `truncate <size>`
   - Truncate the file to at most *size* bytes.
-- `inspect <pos> <endian>`
+- `inspect view <endian> <pos>`
   - Inspect and edit data from position *pos* in bytes with *endian* endianness. *endian* can only be `big` or `small`.
-  - After printing a page, it is prompted to input inspect option command.
-    - `edit <dtype> <data>`
-      - Write *data* of data type *dtype* starting from position *pos*.
+- `edit edit <endian> <pos> <dtype> <data>`
+  - Write *data* of data type *dtype* starting from position *pos* with *endian* endianness.
 - `goto <pos>`
   - Go to the page that position *pos* located.
 - `prev`

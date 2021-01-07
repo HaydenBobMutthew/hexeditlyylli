@@ -9,7 +9,14 @@ init()
 discard_negatives = lambda x: x if x >= 0 else 0
 
 def option_parser(file, opt):
-    opt = opt.split(' ', maxsplit=2)
+    opt = opt.split(' ', maxsplit=1)
+    
+    if opt[0] == 'inspect':
+        opt = [opt[0]] + opt[1].split(' ', maxsplit=5)
+    elif opt[0] in {'help', 'exit', 'print', 'prev', ''}:
+        pass
+    else:
+        opt = [opt[0]] + opt[1].split(' ', maxsplit=2)
     
     if opt[0] == 'write':
         file.write(int(opt[1], 16), opt[2])
@@ -18,12 +25,19 @@ def option_parser(file, opt):
     elif opt[0] == 'trunc' or opt[0] == 'truncate':
         file.truncate(int(opt[1], 16))
     elif opt[0] == 'inspect':
-        file.inspect(int(opt[1], 16), opt[2])
+        if opt[1] == 'view':
+            file.inspect_view(opt[2], int(opt[3], 16))
+        elif opt[1] == 'edit':
+            file.inspect_edit(opt[2], int(opt[3], 16), opt[4], opt[5])   
+        else:
+            raise ValueError(f"invaild option: '{opt[0]} {opt[1]}'")
+    elif opt[0] == 'goto':
+        file.goto(int(opt[1], 16))
     elif opt[0] == 'help':
         raise NotImplementedError('work in progress')
     elif opt[0] == 'exit':
         exit()
-    elif opt[0] == 'next' or opt[0] == '':
+    elif opt[0] == 'print' or opt[0] == '':
         pass
     elif opt[0] == 'prev':
         file.prev()
@@ -55,16 +69,9 @@ class HexFile(object):
         
         self.__half = bytes_per_line // 2
     
-    def next(self, start=None, data=None, inspect=None):
-        line_no = self.file.tell()
-        
-        filesize = os.path.getsize(self.file.name)
-        
-        foo = len(f'{filesize - 1:x}')
-        if foo == 1:
-            foo = 2
-        
+    def print(self, start=None, data=None, inspect=None):
         if start != None:
+            self.file.seek(start)
             end = start + len(data) - 1
             highlight_flag = True
             if inspect:
@@ -74,6 +81,14 @@ class HexFile(object):
             highlight_fore = Fore.BLACK
         else:
             highlight_flag = False
+        
+        line_no = self.file.tell()
+        
+        filesize = os.path.getsize(self.file.name)
+        
+        foo = len(f'{filesize - 1:x}')
+        if foo == 1:
+            foo = 2
         
         break_flag = False
         
@@ -101,26 +116,26 @@ class HexFile(object):
             for byte_pos, byte in enumerate(contents):
                 current_byte_pos = line_no + line_section_no + byte_pos
                 
-                if start != None:
-                    if start <= current_byte_pos <= end:
+                if highlight_flag:
+                    if current_byte_pos == start or (start <= current_byte_pos <= end and byte_pos == 0):
                         printed = f'{printed}{highlight_back}{Fore.BLACK}'
-                        highlight_flag = True
                 
                 printed = f'{printed}{byte:02x} '
                 
+                if highlight_flag:
+                    if byte_pos == self.bytes_per_line - 1:
+                        printed = f'{printed[:-1]}{Style.RESET_ALL} '
+                    if current_byte_pos == end:
+                        printed = f'{printed[:-1]}{Style.RESET_ALL} '
+                
                 if byte_pos == self.__half - 1:
                     if highlight_flag:
-                        printed = f'{printed[:-1]}{Style.RESET_ALL} | '
-                        if current_byte_pos != end:
-                            printed = f'{printed}{highlight_back}{Fore.BLACK}'
+                        if start <= current_byte_pos < end:
+                            printed = f'{printed[:-1]}{Style.RESET_ALL} | {highlight_back}{Fore.BLACK}'
+                        else:
+                            printed = f'{printed}| '
                     else:
                         printed = f'{printed}| '
-                
-                if start != None:
-                    if not (start <= current_byte_pos <= end):
-                        highlight_flag = False
-                    if byte_pos == self.bytes_per_line - 1 and highlight_flag:
-                        printed = f'{printed[:-1]}{Style.RESET_ALL} '
             
             if byte_pos < self.bytes_per_line - 1:
                 for i in range(byte_pos + 1, self.bytes_per_line):
@@ -134,15 +149,15 @@ class HexFile(object):
             for byte_pos, byte in enumerate(contents):
                 current_byte_pos = line_no + line_section_no + byte_pos
                 
-                if start != None:
-                    if not (start <= current_byte_pos <= end):
-                        printed = f'{printed}{Style.RESET_ALL}{code_to_char(byte)}'
-                    else:
+                if highlight_flag:
+                    if start <= current_byte_pos <= end:
                         printed = f'{printed}{code_to_char(byte, (highlight_back, highlight_fore))}'
+                    else:
+                        printed = f'{printed}{Style.RESET_ALL}{code_to_char(byte)}'
                 else:
                     printed = f'{printed}{code_to_char(byte)}'
             
-            if start != None:
+            if highlight_flag:
                 printed = f'{printed}{Style.RESET_ALL}'
             
             print(printed)
@@ -154,13 +169,14 @@ class HexFile(object):
     
     def goto(self, pos):
         self.file.seek(pos // self.byte_size * self.byte_size)
+        self.print()
     
     def close(self):
         self.file.close()
     
-    def inspect(self, pos, endian):
+    def inspect_view(self, endian, pos):
         self.file.seek(discard_negatives((self.file.tell() // self.byte_size - 1) * self.byte_size))
-        self.next(pos, b'\x00\x00\x00\x00\x00\x00\x00\x00', True)
+        self.print(pos, b'\x00\x00\x00\x00\x00\x00\x00\x00', True)
         
         print()
         
@@ -180,18 +196,10 @@ class HexFile(object):
             print(f'{type_:<29}| {inspected_item:< 43}')
         
         print(f"{printed_bar}'{printed_foo}-{printed_foo}")
-        
-        opt = input('Inspect option command (Press Enter to continue): ')
-        
-        opt = opt.split(' ', maxsplit=3)
-        
-        if opt[0] == 'edit':
-            edit.write_typed_data(self.file, endian, opt[1], opt[2])
-            self.next(pos, opt[2])
-        elif opt[0] == '':
-            pass
-        else:
-            raise ValueError(f"invaild option: '{opt[0]}'")
+    
+    def inspect_edit(self, endian, pos, dtype, data):
+        data_ = edit.write_typed_data(self.file, endian, pos, dtype, data)    
+        self.print(pos, data_)
     
     def write(self, start, data):
         if data[0] == '"' or data[0] == "'":
@@ -203,7 +211,7 @@ class HexFile(object):
         
         self.file.seek(start // self.byte_size)
         
-        self.next(start, data)
+        self.print(start, data)
     
     def append(self, data):
         self.write(os.path.getsize(self.file.name), data)
@@ -224,19 +232,19 @@ def main(filename, bytes_per_line, line_size):
         filesize = os.path.getsize(file.name)
         
         while file.file.tell() < filesize:
-            file.next()
+            file.print()
             
             option = None
-            while option not in {'', 'prev', 'next', 'trunc'}:
+            while option not in {'', 'prev', 'print', 'trunc'}:
                 option = input('Option command (Press Enter to continue): ')
                 option = option_parser(file, option)
             
             filesize = os.path.getsize(file.name)
         
         if filesize == 0:
-            file.next()
+            file.print()
             
             option = None
-            while option not in {'', 'prev', 'next', 'trunc'}:
+            while option not in {'', 'prev', 'print', 'trunc'}:
                 option = input('Option command (Press Enter to continue): ')
                 option = option_parser(file, option)

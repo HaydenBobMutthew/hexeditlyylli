@@ -16,7 +16,7 @@ def write_ascii(file, start, data):
 def truncate(file, size):
     file.truncate(size)
     
-def write_typed_data(file, endian, dtype, data):
+def write_typed_data(file, endian, pos, dtype, data):
     if endian == 'big':
         format_string = '>'
     elif endian == 'little':
@@ -24,4 +24,15 @@ def write_typed_data(file, endian, dtype, data):
     else:
         raise TypeError(f"invaild endianness: '{endian}'")
     
-    write_bytes(file, pack(f'{format_string}{dtype}', data))
+    if dtype.lower() in {'b', 'h', 'i', 'q'}:
+        data = int(data)
+    elif dtype in {'e', 'f', 'd'}:
+        data = float(dtype)
+    else:
+        raise ValueError(f"invaild data type: '{dtype}'")
+    
+    data_ = pack(f'{format_string}{dtype}', data)
+    
+    write_bytes(file, pos, data_)
+    
+    return data_
