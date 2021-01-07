@@ -12,7 +12,7 @@ A text user interface-based [hex editor](https://en.wikipedia.org/wiki/Hex_edito
 Run `__main__.py -f <filename> -l <number of lines> -b <bytes per line>` to view and edit hex data of a file.
 `-l` and `-b` can be omitted and defaults to 16.
 
-![How it look safter a successful launch](/images/view.png)
+![How it looks safter a successful launch](/images/view.png)
 
 ### Option command arguments
 
