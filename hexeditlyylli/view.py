@@ -15,7 +15,7 @@ def option_parser(file, opt):
     
     if opt[0] == 'inspect':
         opt = [opt[0]] + opt[1].split(' ', maxsplit=5)
-    elif opt[0] in {'help', 'exit', 'print', 'prev', ''}:
+    elif opt[0] in {'help', 'exit', 'next', 'prev', ''}:
         pass
     else:
         opt = [opt[0]] + opt[1].split(' ', maxsplit=1)
@@ -24,6 +24,8 @@ def option_parser(file, opt):
         file.write(int(opt[1], 16), opt[2])
     elif opt[0] == 'append':
         file.append(opt[1])
+    elif opt[0] == 'insert':
+        file.insert(int(opt[1], 16), opt[2])
     elif opt[0] == 'trunc' or opt[0] == 'truncate':
         file.truncate(int(opt[1], 16))
     elif opt[0] == 'inspect':
@@ -39,7 +41,7 @@ def option_parser(file, opt):
         raise NotImplementedError('work in progress')
     elif opt[0] == 'exit':
         exit()
-    elif opt[0] == 'print' or opt[0] == '':
+    elif opt[0] == 'next' or opt[0] == '':
         pass
     elif opt[0] == 'prev':
         file.prev()
@@ -71,10 +73,8 @@ class HexFile(object):
         
         self.__half = bytes_per_line // 2
     
-    def print(self, start=None, data=None, inspect=None):
+    def print(self, start=None, end=None, inspect=None):
         if start != None:
-            self.file.seek(start)
-            end = start + len(data) - 1
             highlight_flag = True
             if inspect:
                 highlight_back = Back.YELLOW
@@ -178,7 +178,7 @@ class HexFile(object):
     
     def inspect_view(self, endian, pos):
         self.file.seek(discard_negatives((self.file.tell() // self.byte_size - 1) * self.byte_size))
-        self.print(pos, b'\x00\x00\x00\x00\x00\x00\x00\x00', True)
+        self.print(pos, 8, True)
         
         print()
         
@@ -201,7 +201,7 @@ class HexFile(object):
     
     def inspect_edit(self, endian, pos, dtype, data):
         data_ = edit.write_typed_data(self.file, endian, pos, dtype, data)    
-        self.print(pos, data_)
+        self.print(pos, len(data_))
     
     def write(self, start, data):
         if data[0] == '"' or data[0] == "'":
@@ -211,9 +211,28 @@ class HexFile(object):
             data = bytes([int(data[i:i+2], 16) for i in range(0, len(data), 2)])
             edit.write_bytes(self.file, start, data)
         
-        self.file.seek(start // self.byte_size)
+        self.file.seek(start // self.byte_size * self.byte_size)
         
-        self.print(start, data)
+        end = start + len(data) - 1
+        self.print(start, end)
+    
+    def insert(self, start, data, chunk_size=1024):
+        if data[0] == '"' or data[0] == "'":
+            data = data[1:-1]
+            self.file = edit.insert_ascii(self.file, start, data, chunk_size)
+        else:
+            data = bytes([int(data[i:i+2], 16) for i in range(0, len(data), 2)])
+            self.file = edit.insert_bytes(self.file, start, data, chunk_size)
+        
+        self.file.seek(start // self.byte_size * self.byte_size)
+        
+        end = start + len(data) - 1
+        self.print(start, end)
+    
+    def remove(self, start, end):
+        edit.remove()
+        
+        self.print(start, end)
     
     def append(self, data):
         self.write(os.path.getsize(self.file.name), data)
@@ -237,16 +256,16 @@ def main(filename, bytes_per_line, line_size):
             file.print()
             
             option = None
-            while option not in {'', 'prev', 'print', 'trunc'}:
+            while option not in {'', 'next', 'prev', 'trunc'}:
                 option = input('Option command (Press Enter to continue): ')
                 option = option_parser(file, option)
             
             filesize = os.path.getsize(file.name)
         
-        if filesize == 0:
-            file.print()
-            
-            option = None
-            while option not in {'', 'prev', 'print', 'trunc'}:
-                option = input('Option command (Press Enter to continue): ')
-                option = option_parser(file, option)
+            if filesize == 0:
+                file.print()
+                
+                option = None
+                while option not in {'', 'next', 'prev', 'trunc'}:
+                    option = input('Option command (Press Enter to continue): ')
+                    option = option_parser(file, option)
