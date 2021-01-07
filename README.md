@@ -20,12 +20,18 @@ Run `__main__.py -f <filename> -l <number of lines> -b <bytes per line>` to view
 After printing a page, it is prompted to input option command.
 
 *data* can be a string (enclosed with `'` or `"`) or a hexadecimal string.
+*endian* can only be `big` or `little`.
+*start* and *end* are inputted as a hexadecimal number.
 
 - `write <start> <data>`
-  - Write *data* starting from position *start* in bytes.
+  - Overwrite *data* starting from position *start* in bytes.
   ![Write Data](/images/write.png)
 - `append <data>`
   - Append *data* at the end of file.
+- `insert <start> <data>`
+  - Insert *data* starting from one byte before position *start*.
+- `remove <start> <end>`
+  - Remove data from position *start* to *end*.
 - `trunc <size>` or `truncate <size>`
   - Truncate the file to at most *size* bytes.
 - `inspect view <endian> <pos>`

@@ -83,6 +83,38 @@ def insert_ascii(file, start, data, chunk_size=1024):
     
     return file
 
+def remove(file, start, end, chunk_size=1024):
+    current_pos = file.tell()
+    
+    filename = file.name
+    
+    with open(f'hexeditlyylli/{os.path.basename(filename)}', 'wb') as f:
+        file.seek(0)
+        for i in range(0, start, chunk_size):
+            if start - i >= chunk_size:
+                data_ = file.read(chunk_size)
+            else:
+                data_ = file.read(start)
+            
+            if data_ == b'':
+                break
+            else:
+                f.write(data_)
+        
+        file.seek(end)
+        
+        while data_ != b'':
+            data_ = file.read(chunk_size)
+            f.write(data_)
+    
+    file.close()
+    shutil.move(f'hexeditlyylli/{os.path.basename(filename)}', os.path.basename(filename))
+    file = open(filename, 'rb+')
+    
+    file.seek(current_pos)
+    
+    return file
+
 def truncate(file, size):
     file.truncate(size)
     

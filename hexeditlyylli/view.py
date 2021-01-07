@@ -26,6 +26,8 @@ def option_parser(file, opt):
         file.append(opt[1])
     elif opt[0] == 'insert':
         file.insert(int(opt[1], 16), opt[2])
+    elif opt[0] == 'remove':
+        file.remove(int(opt[1], 16), int(opt[2], 16))
     elif opt[0] == 'trunc' or opt[0] == 'truncate':
         file.truncate(int(opt[1], 16))
     elif opt[0] == 'inspect':
@@ -229,13 +231,21 @@ class HexFile(object):
         end = start + len(data) - 1
         self.print(start, end)
     
-    def remove(self, start, end):
-        edit.remove()
+    def remove(self, start, end, chunk_size=1024):
+        self.file = edit.remove(self.file, start, end, chunk_size)
         
-        self.print(start, end)
+        self.file.seek(start // self.byte_size * self.byte_size)
+        
+        self.print()
     
     def append(self, data):
-        self.write(os.path.getsize(self.file.name), data)
+        start = os.path.getsize(self.file.name)
+        
+        self.write(start, data)
+        
+        end = os.path.getsize(self.file.name)
+        
+        self.print(start, end)
     
     def truncate(self, size):
         orinigal_pos = self.file.tell()
@@ -245,6 +255,8 @@ class HexFile(object):
         size_ = os.path.getsize(self.file.name)
         if orinigal_pos >= size_:
             self.file.seek(discard_negatives(size_ - self.byte_size))
+        
+        self.print()
 
 def main(filename, bytes_per_line, line_size):
     with open(filename, 'rb+') as f:
@@ -252,20 +264,19 @@ def main(filename, bytes_per_line, line_size):
         
         filesize = os.path.getsize(file.name)
         
-        while file.file.tell() < filesize:
+        break_flag = False
+        while file.file.tell() < filesize or filesize == 0:
+            if filesize == 0:
+                break_flag = True
+            
             file.print()
             
             option = None
-            while option not in {'', 'next', 'prev', 'trunc'}:
+            while option not in {'', 'next', 'prev'}:
                 option = input('Option command (Press Enter to continue): ')
                 option = option_parser(file, option)
             
             filesize = os.path.getsize(file.name)
-        
-            if filesize == 0:
-                file.print()
-                
-                option = None
-                while option not in {'', 'next', 'prev', 'trunc'}:
-                    option = input('Option command (Press Enter to continue): ')
-                    option = option_parser(file, option)
+            
+            if filesize == 0 and break_flag:
+                break
