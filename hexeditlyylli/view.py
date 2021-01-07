@@ -3,6 +3,9 @@ import struct
 
 from colorama import init, Fore, Back, Style
 
+import hexeditlyylli.edit as edit
+import hexeditlyylli.inspect as inspect
+
 init()
 
 discard_negatives = lambda x: x if x >= 0 else 0
