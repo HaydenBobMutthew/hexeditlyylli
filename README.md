@@ -54,3 +54,5 @@ After printing a page, it is prompted to input option command.
 #### Miscellaneous commands
 - `help`
   - Get help of option commands. (Work in progress feature)
+- `fileinfo`
+  - Get the file info. (Work in progress feature, only file size is printed)

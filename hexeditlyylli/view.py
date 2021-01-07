@@ -55,10 +55,10 @@ def option_parser(file, opt):
             file.prev(1)
         else:
             file.prev(opt[1])
+    elif opt[0] == 'fileinfo':
+        file.fileinfo()
     else:
         raise ValueError(f"invaild option: '{opt[0]}'")
-        
-    return opt[0]
 
 def code_to_char(code, highlight=None):
     if 0x00 <= code <= 0x1f or code in {0x81, 0x8d, 0x8f, 0x90, 0x9d}:
@@ -275,6 +275,13 @@ class HexFile(object):
             self.file.seek(discard_negatives(size_ - self.byte_size))
         
         self.print()
+        
+    def fileinfo(self):
+        filesize = os.path.getsize(self.file.name)
+        
+        foo = len(f'{filesize - 1:x}')
+        
+        print(f'Filesize: {filesize} bytes (End of file at position {filesize:0{foo}x})')
 
 def main(filename, bytes_per_line, line_size):
     with open(filename, 'rb+') as f:
@@ -290,7 +297,7 @@ def main(filename, bytes_per_line, line_size):
                 break_flag = True
             
             option = input('Option command (Press Enter to continue): ')
-            option = option_parser(file, option)
+            option_parser(file, option)
             
             filesize = os.path.getsize(file.name)
             
