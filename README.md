@@ -29,7 +29,7 @@ After printing a page, it is prompted to input option command.
 - `trunc <size>` or `truncate <size>`
   - Truncate the file to at most *size* bytes.
 - `inspect view <endian> <pos>`
-  - Inspect and edit data from position *pos* in bytes with *endian* endianness. *endian* can only be `big` or `small`.
+  - Inspect and edit data from position *pos* in bytes with *endian* endianness. *endian* can only be `big` or `little`.
   ![Inspect Data](/images/inspect_view.png)
 - `inspect edit <endian> <pos> <dtype> <data>`
   - Write *data* of data type *dtype* starting from position *pos* with *endian* endianness.

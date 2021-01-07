@@ -82,7 +82,7 @@ class HexFile(object):
         else:
             highlight_flag = False
         
-        line_no = self.file.tell()
+        line_no = self.file.tell() // self.byte_size * self.byte_size
         
         filesize = os.path.getsize(self.file.name)
         
