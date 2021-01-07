@@ -1,5 +1,5 @@
 # hexeditlyylli
-A text user interface-based [hex editor](https://en.wikipedia.org/wiki/Hex_editor).
+A text user interface-based [hex editor](https://en.wikipedia.org/wiki/Hex_editor) written in Python. Support big files!
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FHaydenBobMutthew%2Fhexeditlyylli%2F&count_bg=%233961FF&title_bg=%23555555&icon=github.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/HaydenBobMutthew/hexeditlyylli)
 
