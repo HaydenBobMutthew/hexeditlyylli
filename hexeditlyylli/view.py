@@ -40,7 +40,7 @@ def option_parser(file, opt):
     elif opt[0] == 'goto':
         file.goto(int(opt[1], 16))
     elif opt[0] == 'help':
-        raise NotImplementedError('work in progress')
+        HexFile.help()
     elif opt[0] == 'exit':
         exit()
     elif opt[0] == 'next':
@@ -82,6 +82,11 @@ class HexFile(object):
         self.byte_size = self.line_size * self.bytes_per_line
         
         self.__half = bytes_per_line // 2
+    
+    @staticmethod
+    def help():
+        with open(f'{os.path.dirname(__file__)}/README.md', 'r') as readme:
+            raise NotImplementedError('work in progress')
     
     def print(self, start=None, end=None, inspect=None):
         if start != None:
