@@ -138,3 +138,24 @@ def write_typed_data(file, endian, pos, dtype, data):
     write_bytes(file, pos, data_)
     
     return data_
+    
+def insert_typed_data(file, endian, pos, dtype, data):
+    if endian == 'big':
+        format_string = '>'
+    elif endian == 'little':
+        format_string = '<'
+    else:
+        raise TypeError(f"invaild endianness: '{endian}'")
+    
+    if dtype.lower() in {'b', 'h', 'i', 'q'}:
+        data = int(data)
+    elif dtype in {'e', 'f', 'd'}:
+        data = float(dtype)
+    else:
+        raise ValueError(f"invaild data type: '{dtype}'")
+    
+    data_ = pack(f'{format_string}{dtype}', data)
+    
+    insert_bytes(file, pos, data_)
+    
+    return data_

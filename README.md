@@ -33,8 +33,12 @@ After printing a page, it is prompted to input option command.
   - Remove data from position *start* to *end*.
 - `trunc <size>` or `truncate <size>`
   - Truncate the file to at most *size* bytes.
-- `inspect edit <endian> <pos> <dtype> <data>`
-  - Write *data* of data type *dtype* starting from position *pos* with *endian* endianness.
+- `inspect write <endian> <pos> <dtype> <data>`
+  - Overwrite *data* of data type *dtype* starting from position *pos* with *endian* endianness.
+- `inspect append <endian> <pos> <dtype> <data>`
+  - Append *data* of data type *dtype* at the end of file with *endian* endianness.
+- `inspect insert <endian> <pos> <dtype> <data>`
+  - Insert *data* of data type *dtype* starting from one byte before position *start* with *endian* endianness.
 
 #### Data inspection commands
 - `inspect view <endian> <pos>`

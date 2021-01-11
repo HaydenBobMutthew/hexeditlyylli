@@ -33,8 +33,12 @@ def option_parser(file, opt):
     elif opt[0] == 'inspect':
         if opt[1] == 'view':
             file.inspect_view(opt[2], int(opt[3], 16))
-        elif opt[1] == 'edit':
-            file.inspect_edit(opt[2], int(opt[3], 16), opt[4], opt[5])   
+        elif opt[1] == 'write':
+            file.inspect_write(opt[2], int(opt[3], 16), opt[4], opt[5])
+        elif opt[1] == 'append':
+            file.inspect_append(opt[2], opt[3], opt[4])
+        elif opt[1] == 'insert':
+            file.inspect_insert(opt[2], int(opt[3], 16), opt[4], opt[5])
         else:
             raise ValueError(f"invaild option: '{opt[0]} {opt[1]}'")
     elif opt[0] == 'goto':
@@ -88,8 +92,13 @@ class HexFile(object):
         with open(f'{os.path.dirname(__file__)}/README.md', 'r') as readme:
             raise NotImplementedError('work in progress')
     
-    def print(self, start=None, end=None, inspect=None):
+    def print(self, start=None, length=None, inspect=None):
         if start != None:
+            end = start + length - 1
+            filesize = os.path.getsize(self.file.name)
+            if end > filesize:
+                end = filesize
+            
             highlight_flag = True
             if inspect:
                 highlight_back = Back.YELLOW
@@ -182,9 +191,9 @@ class HexFile(object):
         print(f'{"-" * foo}-\'{"-" * self.__half * 3}-\'{"-" * self.__half * 3}-\'\'-{"-" * self.bytes_per_line}')
     
     def next(self, pages=1):
-        self.file.seek((self.file.tell() // self.byte_size + pages - 1) * self.byte_size)
+        self.file.seek((self.file.tell() // self.byte_size + pages) * self.byte_size)
         
-        if self.file.tell() >= os.path.getsize(self.file.name):
+        if self.file.tell() > os.path.getsize(self.file.name):
             exit()
         
         self.print()
@@ -202,7 +211,9 @@ class HexFile(object):
         self.file.close()
     
     def inspect_view(self, endian, pos):
-        self.file.seek(discard_negatives((self.file.tell() // self.byte_size - 1) * self.byte_size))
+        current_page = discard_negatives((self.file.tell() // self.byte_size - 1) * self.byte_size)
+        
+        self.file.seek(current_page)
         self.print(pos, 8, True)
         
         print()
@@ -214,18 +225,60 @@ class HexFile(object):
         
         print(f'{printed_bar}.{printed_foo}.{printed_foo}\n{"Type":<29}|{"Unsigned":^23}|{"Signed":^23}\n{printed_bar}+{printed_foo}+{printed_foo}')
         
-        for type_, inspected_item in inspected[0].items():
-            print(f'{type_:<29}| {inspected_item[0]:< 21} | {inspected_item[1]:< 21} ')
+        if inspected["B"] == 'End of file' and inspected["b"] == 'End of file':
+            print(f'{"8-bit Integer (B/b)":<29}| {inspected["B"]:<21} | {inspected["b"]:<21} ')
+        else:
+            print(f'{"8-bit Integer (B/b)":<29}| {inspected["B"]:< 21} | {inspected["b"]:< 21} ')
+            
+        if inspected["H"] == 'End of file' and inspected["h"] == 'End of file':
+            print(f'{"16-bit Integer (H/h)":<29}| {inspected["H"]:<21} | {inspected["h"]:<21} ')
+        else:
+            print(f'{"16-bit Integer (H/h)":<29}| {inspected["H"]:< 21} | {inspected["h"]:< 21} ')
+        
+        if inspected["I"] == 'End of file' and inspected["i"] == 'End of file':
+            print(f'{"32-bit Integer (I/i)":<29}| {inspected["I"]:<21} | {inspected["i"]:<21} ')
+        else:
+            print(f'{"32-bit Integer (I/i)":<29}| {inspected["I"]:< 21} | {inspected["i"]:< 21} ')
+        
+        if inspected["Q"] == 'End of file' and inspected["q"] == 'End of file':
+            print(f'{"64-bit Integer (Q/q)":<29}| {inspected["Q"]:<21} | {inspected["q"]:<21} ')
+        else:
+            print(f'{"64-bit Integer (Q/q)":<29}| {inspected["Q"]:< 21} | {inspected["q"]:< 21} ')
         
         print(f"{printed_bar}+{printed_foo}'{printed_foo}")
         
-        for type_, inspected_item in inspected[1].items():
-            print(f'{type_:<29}| {inspected_item:< 45}')
+        if inspected["e"] == 'End of file':
+            print(f'{"16-bit Floating Point (e)":<29}| {inspected["e"]:<45}')
+        else:
+            print(f'{"16-bit Floating Point (e)":<29}| {inspected["e"]:< 45}')
+        
+        if inspected["f"] == 'End of file':
+            print(f'{"16-bit Floating Point (f)":<29}| {inspected["f"]:<45}')
+        else:
+            print(f'{"16-bit Floating Point (f)":<29}| {inspected["f"]:< 45}')
+        
+        if inspected["d"] == 'End of file':
+            print(f'{"16-bit Floating Point (d)":<29}| {inspected["d"]:<45}')
+        else:
+            print(f'{"16-bit Floating Point (d)":<29}| {inspected["d"]:< 45}')
         
         print(f"{printed_bar}'{printed_foo}-{printed_foo}")
+        
+        self.file.seek(current_page)
     
-    def inspect_edit(self, endian, pos, dtype, data):
-        data_ = edit.write_typed_data(self.file, endian, pos, dtype, data)    
+    def inspect_write(self, endian, pos, dtype, data):
+        data_ = edit.write_typed_data(self.file, endian, pos, dtype, data)
+        
+        self.print(pos, len(data_))
+        
+    def inspect_append(self, endian, dtype, data):
+        pos = os.path.getsize(self.file.name)
+        
+        self.inspect_write(endian, pos, dtype, data)
+    
+    def inspect_insert(self, endian, pos, dtype, data):
+        data_ = edit.insert_typed_data(self.file, endian, pos, dtype, data)
+        
         self.print(pos, len(data_))
     
     def write(self, start, data):
@@ -265,10 +318,6 @@ class HexFile(object):
         start = os.path.getsize(self.file.name)
         
         self.write(start, data)
-        
-        end = os.path.getsize(self.file.name)
-        
-        self.print(start, end)
     
     def truncate(self, size):
         orinigal_pos = self.file.tell()
@@ -295,6 +344,8 @@ def main(filename, bytes_per_line, line_size):
         filesize = os.path.getsize(file.name)
         
         file.print()
+        
+        file.file.seek(0)
         
         break_flag = False
         while file.file.tell() < filesize or filesize == 0:

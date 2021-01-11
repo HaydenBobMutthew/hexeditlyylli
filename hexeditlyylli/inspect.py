@@ -14,18 +14,42 @@ def inspect(file, loc, endian):
     else:
         raise TypeError(f"invaild endianness: '{endian}'")
     
-    returned_int = {}
-    returned_float = {}
+    returned = {}
     
-    returned_int['8-bit Integer'] = (unpack(f'{format_string}b', data[0:1])[0], unpack(f'{format_string}B', data[0:1])[0])
-    returned_int['16-bit Integer'] = (unpack(f'{format_string}h', data[0:2])[0], unpack(f'{format_string}H', data[0:2])[0])
-    returned_int['32-bit Integer'] = (unpack(f'{format_string}i', data[0:4])[0], unpack(f'{format_string}I', data[0:4])[0])
-    returned_int['64-bit Integer'] = (unpack(f'{format_string}q', data[0:8])[0], unpack(f'{format_string}Q', data[0:8])[0])
+    if len(data) >= 1:
+        returned['B'] = unpack(f'{format_string}B', data[0:1])[0]
+        returned['b'] = unpack(f'{format_string}b', data[0:1])[0]
+    else:
+        returned['H'] = 'End of file'
+        returned['h'] = 'End of file'
     
-    returned_float['16-bit Floating Point'] = unpack(f'{format_string}e', data[0:2])[0]
-    returned_float['32-bit Floating Point'] = unpack(f'{format_string}f', data[0:4])[0]
-    returned_float['64-bit Floating Point'] = unpack(f'{format_string}d', data[0:8])[0]
+    if len(data) >= 2:
+        returned['H'] = unpack(f'{format_string}H', data[0:2])[0]
+        returned['h'] = unpack(f'{format_string}h', data[0:2])[0]
+        returned['e'] = unpack(f'{format_string}e', data[0:2])[0]
+    else:
+        returned['H'] = 'End of file'
+        returned['h'] = 'End of file'
+        returned['e'] = 'End of file'
+    
+    if len(data) >= 4:
+        returned['I'] = unpack(f'{format_string}I', data[0:4])[0]
+        returned['i'] = unpack(f'{format_string}i', data[0:4])[0]
+        returned['f'] = unpack(f'{format_string}f', data[0:4])[0]
+    else:
+        returned['I'] = 'End of file'
+        returned['i'] = 'End of file'
+        returned['f'] = 'End of file'
+    
+    if len(data) >= 8:
+        returned['Q'] = unpack(f'{format_string}Q', data[0:8])[0]
+        returned['q'] = unpack(f'{format_string}q', data[0:8])[0]
+        returned['d'] = unpack(f'{format_string}d', data[0:8])[0]
+    else:
+        returned['Q'] = 'End of file'
+        returned['q'] = 'End of file'
+        returned['d'] = 'End of file'
     
     file.seek(original_pos)
     
-    return returned_int, returned_float
+    return returned
