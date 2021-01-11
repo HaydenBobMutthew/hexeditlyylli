@@ -38,7 +38,7 @@ After printing a page, it is prompted to input option command.
 
 #### Data inspection commands
 - `inspect view <endian> <pos>`
-  - Inspect and edit data from position *pos* in bytes with *endian* endianness.
+  - Inspect data from position *pos* in bytes with *endian* endianness.
   ![Inspect Data](/images/inspect_view.png)
   
 #### Navigation commands
