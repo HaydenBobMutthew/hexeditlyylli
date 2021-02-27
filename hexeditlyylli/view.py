@@ -344,6 +344,10 @@ class HexFile(object):
         print(f'Filesize: {filesize} bytes (End of file at position {filesize:0{foo}x})')
 
 def main(filename, bytes_per_line, line_size):
+    print('hexeditlyylli v0.9')
+    
+    print(f'File: {os.path.abspath(filename)} ({os.path.getsize(filename)} bytes)')
+    
     with open(filename, 'rb+') as f:
         file = HexFile(f, bytes_per_line, line_size)
         
