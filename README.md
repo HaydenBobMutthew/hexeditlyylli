@@ -7,9 +7,10 @@ A text user interface-based [hex editor](https://en.wikipedia.org/wiki/Hex_edito
 
 ### Requirments
 - Python 3.9 or up
+- [Colorama](https://pypi.org/project/colorama/)
 
 ### How to launch the program
-Run `__main__.py -f <filename> -l <number of lines> -b <bytes per line>` to view and edit hex data of a file.
+Run `python __main__.py -f <filename> -l <number of lines> -b <bytes per line>` to view and edit hex data of a file.
 `-l` and `-b` can be omitted and defaults to 16.
 
 ![How it looks after a successful launch](/images/view.png)
