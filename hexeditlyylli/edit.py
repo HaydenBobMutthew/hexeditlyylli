@@ -1,4 +1,5 @@
 from struct import pack
+from datetime import datetime
 import shutil
 import os
 
@@ -128,12 +129,14 @@ def write_typed_data(file, endian, pos, dtype, data):
     
     if dtype.lower() in {'b', 'h', 'i', 'q'}:
         data = int(data)
+        data_ = pack(f'{format_string}{dtype}', data)
     elif dtype in {'e', 'f', 'd'}:
-        data = float(dtype)
+        data = float(data)
+        data_ = pack(f'{format_string}{dtype}', data)
+    elif dtype == 'ut':
+        data_ = pack(f'{format_string}i', int(datetime.strptime(f'{data} +0000', '%Y-%m-%d %H:%M:%S %z').timestamp()))
     else:
         raise ValueError(f"invaild data type: '{dtype}'")
-    
-    data_ = pack(f'{format_string}{dtype}', data)
     
     write_bytes(file, pos, data_)
     
@@ -149,12 +152,14 @@ def insert_typed_data(file, endian, pos, dtype, data):
     
     if dtype.lower() in {'b', 'h', 'i', 'q'}:
         data = int(data)
+        data_ = pack(f'{format_string}{dtype}', data)
     elif dtype in {'e', 'f', 'd'}:
-        data = float(dtype)
+        data = float(data)
+        data_ = pack(f'{format_string}{dtype}', data)
+    elif dtype == 'ut':
+        data_ = pack(f'{format_string}i', int(datetime.strptime(data, '%Y-%m-%d %H:%M:%S').timestamp()))
     else:
         raise ValueError(f"invaild data type: '{dtype}'")
-    
-    data_ = pack(f'{format_string}{dtype}', data)
     
     insert_bytes(file, pos, data_)
     

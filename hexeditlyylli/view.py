@@ -14,7 +14,7 @@ def option_parser(file, opt):
     opt = opt.split(' ', maxsplit=1)
     
     if opt[0] == 'inspect':
-        opt = [opt[0]] + opt[1].split(' ', maxsplit=5)
+        opt = [opt[0]] + opt[1].split(' ', maxsplit=4)
     elif opt[0] in {'help', 'exit', 'next', 'prev', ''}:
         pass
     else:
@@ -149,9 +149,7 @@ class HexFile(object):
                 printed = f'{printed}{byte:02x} '
                 
                 if highlight_flag:
-                    if byte_pos == self.bytes_per_line - 1:
-                        printed = f'{printed[:-1]}{Style.RESET_ALL} '
-                    if current_byte_pos == end:
+                    if byte_pos == self.bytes_per_line - 1 or current_byte_pos == end:
                         printed = f'{printed[:-1]}{Style.RESET_ALL} '
                 
                 if byte_pos == self.__half - 1:
@@ -164,6 +162,9 @@ class HexFile(object):
                         printed = f'{printed}| '
             
             if byte_pos < self.bytes_per_line - 1:
+                if highlight_flag:
+                    printed = f'{printed[:-1]}{Style.RESET_ALL} '
+                
                 for i in range(byte_pos + 1, self.bytes_per_line):
                     printed = f'{printed}   '
                     
@@ -222,25 +223,26 @@ class HexFile(object):
         
         printed_foo = "-" * 23
         printed_bar = "-" * 29
+        printed_baz = "-" * 47
         
         print(f'{printed_bar}.{printed_foo}.{printed_foo}\n{"Type":<29}|{"Unsigned":^23}|{"Signed":^23}\n{printed_bar}+{printed_foo}+{printed_foo}')
         
-        if inspected["B"] == 'End of file' and inspected["b"] == 'End of file':
+        if inspected["B"] == 'End of file' or inspected["b"] == 'End of file':
             print(f'{"8-bit Integer (B/b)":<29}| {inspected["B"]:<21} | {inspected["b"]:<21} ')
         else:
             print(f'{"8-bit Integer (B/b)":<29}| {inspected["B"]:< 21} | {inspected["b"]:< 21} ')
             
-        if inspected["H"] == 'End of file' and inspected["h"] == 'End of file':
+        if inspected["H"] == 'End of file' or inspected["h"] == 'End of file':
             print(f'{"16-bit Integer (H/h)":<29}| {inspected["H"]:<21} | {inspected["h"]:<21} ')
         else:
             print(f'{"16-bit Integer (H/h)":<29}| {inspected["H"]:< 21} | {inspected["h"]:< 21} ')
         
-        if inspected["I"] == 'End of file' and inspected["i"] == 'End of file':
+        if inspected["I"] == 'End of file' or inspected["i"] == 'End of file':
             print(f'{"32-bit Integer (I/i)":<29}| {inspected["I"]:<21} | {inspected["i"]:<21} ')
         else:
             print(f'{"32-bit Integer (I/i)":<29}| {inspected["I"]:< 21} | {inspected["i"]:< 21} ')
         
-        if inspected["Q"] == 'End of file' and inspected["q"] == 'End of file':
+        if inspected["Q"] == 'End of file' or inspected["q"] == 'End of file':
             print(f'{"64-bit Integer (Q/q)":<29}| {inspected["Q"]:<21} | {inspected["q"]:<21} ')
         else:
             print(f'{"64-bit Integer (Q/q)":<29}| {inspected["Q"]:< 21} | {inspected["q"]:< 21} ')
@@ -253,16 +255,20 @@ class HexFile(object):
             print(f'{"16-bit Floating Point (e)":<29}| {inspected["e"]:< 45}')
         
         if inspected["f"] == 'End of file':
-            print(f'{"16-bit Floating Point (f)":<29}| {inspected["f"]:<45}')
+            print(f'{"32-bit Floating Point (f)":<29}| {inspected["f"]:<45}')
         else:
-            print(f'{"16-bit Floating Point (f)":<29}| {inspected["f"]:< 45}')
+            print(f'{"32-bit Floating Point (f)":<29}| {inspected["f"]:< 45}')
         
         if inspected["d"] == 'End of file':
-            print(f'{"16-bit Floating Point (d)":<29}| {inspected["d"]:<45}')
+            print(f'{"64-bit Floating Point (d)":<29}| {inspected["d"]:<45}')
         else:
-            print(f'{"16-bit Floating Point (d)":<29}| {inspected["d"]:< 45}')
+            print(f'{"64-bit Floating Point (d)":<29}| {inspected["d"]:< 45}')
         
-        print(f"{printed_bar}'{printed_foo}-{printed_foo}")
+        print(f"{printed_bar}+{printed_baz}")
+        
+        print(f'{"UNIX 32-bit DateTime":<29}| {inspected["ut"]:<45} ')
+        
+        print(f"{printed_bar}'{printed_baz}")
         
         self.file.seek(current_page)
     
