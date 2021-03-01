@@ -1,14 +1,13 @@
 import os
 import struct
 
-from colorama import init, Fore, Back, Style
+import colorama
+from colorama import Fore, Back, Style
 
 import hexeditlyylli.edit as edit
 import hexeditlyylli.inspect as inspect
 
-init()
-
-discard_negatives = lambda x: x if x >= 0 else 0
+colorama.init()
 
 def option_parser(file, opt):
     opt = opt.split(' ', maxsplit=1)
@@ -200,7 +199,7 @@ class HexFile(object):
         self.print()
     
     def prev(self, pages=1):
-        self.file.seek(discard_negatives((self.file.tell() // self.byte_size - pages - 1) * self.byte_size))
+        self.file.seek(max((self.file.tell() // self.byte_size - pages - 1) * self.byte_size, 0))
         
         self.print()
     
@@ -212,7 +211,7 @@ class HexFile(object):
         self.file.close()
     
     def inspect_view(self, endian, pos):
-        current_page = discard_negatives((self.file.tell() // self.byte_size - 1) * self.byte_size)
+        current_page = max((self.file.tell() // self.byte_size - 1) * self.byte_size, 0)
         
         self.file.seek(current_page)
         self.print(pos, 8, True)
@@ -332,7 +331,7 @@ class HexFile(object):
         
         size_ = os.path.getsize(self.file.name)
         if orinigal_pos >= size_:
-            self.file.seek(discard_negatives(size_ - self.byte_size))
+            self.file.seek(max(size_ - self.byte_size, 0))
         
         self.print()
         
